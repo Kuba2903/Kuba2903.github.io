@@ -1,0 +1,35 @@
+version: '3'
+services:
+  mysql-db:
+    image: mysql:8.0
+    container_name: mysql-db
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootpassword
+      - MYSQL_DATABASE=mydb
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./mysqlsampledatabase.sql:/docker-entrypoint-initdb.d/mysqlsampledatabase.sql
+    networks:
+      - my-network
+
+  web:
+    build: .  # Budujemy obraz Nginx z lokalnego Dockerfile
+    container_name: my-web-container
+    ports:
+      - "8080:80"
+    volumes:
+      - ./index.html:/usr/share/nginx/html/index.html
+      - ./script.js:/usr/share/nginx/html/script.js
+      - ./style.css:/usr/share/nginx/html/style.css
+    depends_on:
+      - mysql-db
+    networks:
+      - my-network
+
+networks:
+  my-network:
+
+volumes:
+  mysql-data:
+
