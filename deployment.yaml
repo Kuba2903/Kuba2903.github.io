@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: static-web-app
+spec:
+  selector:
+    matchLabels:
+      app: static-web-app
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: static-web-app
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:latest  # Możesz dostosować do własnego obrazu, jeśli masz specjalny
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80  # Nginx nasłuchuje na porcie 80
+          volumeMounts:
+            - name: html-volume
+              mountPath: /usr/share/nginx/html  # Montujemy nasz plik index.html do katalogu Nginx
+      volumes:
+        - name: html-volume
+          configMap:
+            name: html-configmap  # Będziemy trzymać plik index.html w ConfigMap
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: static-web-service
+spec:
+  ports:
+    - port: 80
+      targetPort: 80  # Usługa na porcie 80
+  selector:
+    app: static-web-app
+  type: NodePort  # Możesz zmienić typ na LoadBalancer, jeśli masz zewnętrzny load balancer
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: html-configmap
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Welcome to My Web App</title>
+    </head>
+    <body>
+        <h1>Hello, Kubernetes!</h1>
+        <p>This is a simple static web page served by Nginx.</p>
+    </body>
+    </html>
